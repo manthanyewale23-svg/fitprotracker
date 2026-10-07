@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FitTrack Pro - Simple Fitness Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- In-browser image text reader (OCR) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -43,7 +45,6 @@
     .badge-green  { background: rgba(16,185,129,0.2);  color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
     .badge-yellow { background: rgba(245,158,11,0.2);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
     .badge-orange { background: rgba(249,115,22,0.2);  color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
-    .badge-red    { background: rgba(239,68,68,0.2);   color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
     .badge-blue   { background: rgba(14,165,233,0.2);  color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); }
     .progress-bar  { height: 6px; border-radius: 9999px; background: rgba(71,85,105,0.4); overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 9999px; background: linear-gradient(90deg, #0ea5e9, #8b5cf6); transition: width 0.5s ease; }
@@ -75,7 +76,7 @@
     <div class="flex items-center gap-2">
       <span id="currentDate" class="text-xs text-slate-400 hidden sm:block"></span>
       <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-      <span class="text-xs text-emerald-400 font-semibold">Active</span>
+      <span class="text-xs text-emerald-400 font-semibold">Live</span>
     </div>
   </div>
 </header>
@@ -200,7 +201,7 @@
           <p class="text-xs text-slate-500 mt-3">Calculated using standard body measurement guidelines.</p>
         </div>
 
-        <!-- Easy Reference -->
+        <!-- Quick Reference -->
         <div class="card rounded-2xl p-4 text-xs">
           <h5 class="text-white font-semibold mb-2">Quick Body Fat Guide:</h5>
           <div class="space-y-1.5 text-slate-300">
@@ -214,37 +215,21 @@
     </div>
   </section>
 
-  <!-- ════════════ TAB 2: WORKOUT LOG ════════════ -->
+  <!-- ════════════ TAB 2: WORKOUT LOG (NO SPLIT, TIMETABLE IMAGE UPLOAD) ════════════ -->
   <section id="tab-workout" class="tab-content">
     <div class="mb-5">
       <h2 class="text-xl font-bold text-white">Workout &amp; Exercise Log</h2>
-      <p class="text-slate-400 text-sm mt-0.5">Pick a workout split, load popular exercises, and save your sets.</p>
+      <p class="text-slate-400 text-sm mt-0.5">Write your exercises manually or upload your timetable photo. Everything calculates automatically on the screen!</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-      <!-- Config -->
+      <!-- Setup & Image Upload Panel -->
       <div class="lg:col-span-1 space-y-4">
         <div class="card rounded-2xl p-5">
           <h3 class="font-semibold text-white mb-3 text-sm flex items-center gap-2">
-            <span>🏋️</span> Workout Setup
+            <span>🏋️</span> Today's Workout
           </h3>
           <div class="space-y-3">
-            <div>
-              <label class="block text-xs text-slate-400 mb-1 font-medium">Workout Split</label>
-              <select id="splitSelect" onchange="handleSplitChange()" class="input-field w-full rounded-xl px-3 py-2 text-sm">
-                <option value="push">Push (Chest, Shoulders, Triceps)</option>
-                <option value="pull">Pull (Back &amp; Biceps)</option>
-                <option value="legs">Legs &amp; Abs</option>
-                <option value="upper">Upper Body</option>
-                <option value="lower">Lower Body</option>
-                <option value="fullbody">Full Body</option>
-                <option value="custom">Custom Split</option>
-              </select>
-            </div>
-            <div id="customSplitDiv" class="hidden">
-              <label class="block text-xs text-slate-400 mb-1 font-medium">Name your custom split</label>
-              <input type="text" id="customSplitName" placeholder="e.g. Arms &amp; Shoulders" class="input-field w-full rounded-xl px-3 py-2 text-sm" />
-            </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1 font-medium">Date</label>
               <input type="date" id="workoutDate" class="input-field w-full rounded-xl px-3 py-2 text-sm" />
@@ -253,37 +238,58 @@
               <label class="block text-xs text-slate-400 mb-1 font-medium">Workout Time (Minutes)</label>
               <input type="number" id="workoutDuration" placeholder="50" oninput="updateWorkoutStats()" class="input-field w-full rounded-xl px-3 py-2 text-sm" />
             </div>
-            <button onclick="loadPPLPresets()" class="btn-secondary w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2">
-              <span>📥</span> Load Preset Exercises
-            </button>
-            <button onclick="addExerciseRow()" class="btn-primary w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2">
-              <span>➕</span> Add Another Exercise
+
+            <!-- Timetable Image Upload Box -->
+            <div class="pt-2 border-t border-slate-700/60">
+              <label class="block text-xs text-brand-400 font-semibold mb-1.5 flex items-center gap-1.5">
+                <span>📸</span> Upload Timetable Photo
+              </label>
+              <p class="text-xs text-slate-400 mb-2 leading-relaxed">
+                Take a photo or upload an image of your workout routine. The names will appear automatically in the table, and you can fill in your sets and reps!
+              </p>
+              
+              <input type="file" id="timetableInput" accept="image/*" class="hidden" onchange="handleTimetableUpload(event)" />
+              <button onclick="document.getElementById('timetableInput').click()" class="btn-secondary w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2">
+                <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Choose Timetable Image
+              </button>
+
+              <!-- Upload Status Indicator -->
+              <div id="ocrStatus" class="hidden mt-2 p-2 rounded-xl text-xs text-center" style="background:rgba(14,165,233,0.12);border:1px solid rgba(14,165,233,0.25);color:#38bdf8">
+                <span class="animate-pulse">🔍 Reading exercises from image...</span>
+              </div>
+            </div>
+
+            <!-- Add manual button -->
+            <button onclick="addExerciseRow()" class="btn-primary w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2">
+              <span>➕</span> Add Exercise Manually
             </button>
           </div>
         </div>
 
+        <!-- Real-Time Session Summary (Updates Live) -->
         <div class="card rounded-2xl p-4">
-          <h4 class="font-semibold text-white mb-2 text-sm">Session Summary</h4>
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-semibold text-white text-sm">Session Summary</h4>
+            <span class="badge badge-green text-xs">Live Auto-Update</span>
+          </div>
           <div class="space-y-2 text-xs">
             <div class="flex justify-between"><span class="text-slate-400">Total Exercises</span><span id="totalExercises" class="text-white font-semibold">0</span></div>
-            <div class="flex justify-between"><span class="text-slate-400">Total Sets</span><span id="totalSets" class="text-white font-semibold">0</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Total Sets Completed</span><span id="totalSets" class="text-white font-semibold">0</span></div>
             <div class="flex justify-between"><span class="text-slate-400">Calories Burned</span><span id="workoutCalories" class="text-sky-400 font-semibold">0 kcal</span></div>
             <div class="flex justify-between"><span class="text-slate-400">Time Spent</span><span id="workoutDurationDisplay" class="text-white font-semibold">0 min</span></div>
           </div>
         </div>
       </div>
 
-      <!-- Exercises List -->
+      <!-- Exercise Rows Table -->
       <div class="lg:col-span-2 space-y-4">
         <div class="card rounded-2xl p-5">
-          <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold text-white text-sm flex items-center gap-2">
-              <span id="splitLabel" class="badge badge-blue">Push Day</span>
-              Exercises
+              <span>📋</span> Exercise List
             </h3>
-            <button onclick="saveWorkout()" class="btn-primary px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
-              <span>💾</span> Save Workout
-            </button>
+            <span class="text-xs text-slate-400">Sets &amp; reps update live</span>
           </div>
 
           <!-- Table Header -->
@@ -291,18 +297,14 @@
             <div class="col-span-5">Exercise Name</div>
             <div class="col-span-2 text-center">Sets</div>
             <div class="col-span-2 text-center">Reps</div>
-            <div class="col-span-2 text-center">Weight</div>
+            <div class="col-span-2 text-center">Weight (kg)</div>
             <div class="col-span-1"></div>
           </div>
 
           <div id="exerciseList" class="space-y-1 min-h-24"></div>
 
           <div id="emptyState" class="text-center py-10 text-slate-500 text-xs">
-            No exercises added yet. Click <strong>"Load Preset Exercises"</strong> or <strong>"Add Another Exercise"</strong>.
-          </div>
-
-          <div id="saveSuccess" class="hidden mt-3 p-2.5 rounded-xl text-xs font-semibold text-center" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#34d399">
-            Workout saved successfully!
+            No exercises yet. Click <strong>"Add Exercise Manually"</strong> or <strong>upload an image of your timetable</strong> above!
           </div>
         </div>
       </div>
@@ -388,14 +390,7 @@
 
           <div class="stat-card rounded-xl p-3 text-center">
             <div id="cardioCaloriesDisplay" class="text-2xl font-bold text-orange-400">0</div>
-            <div class="text-xs text-slate-400 mt-0.5">Estimated calories burned</div>
-          </div>
-
-          <button onclick="saveCardio()" class="btn-primary w-full py-2.5 rounded-xl text-sm font-semibold">
-            Save Cardio Session
-          </button>
-          <div id="cardioSuccess" class="hidden p-2 rounded-xl text-xs font-semibold text-center" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#34d399">
-            Cardio saved!
+            <div class="text-xs text-slate-400 mt-0.5">Estimated calories burned (updates live)</div>
           </div>
         </div>
 
@@ -419,7 +414,7 @@
   <section id="tab-summary" class="tab-content">
     <div class="mb-5">
       <h2 class="text-xl font-bold text-white">Daily Calories Summary</h2>
-      <p class="text-slate-400 text-sm mt-0.5">A complete look at all the calories your body burns in a day.</p>
+      <p class="text-slate-400 text-sm mt-0.5">All your daily numbers calculated live in real time.</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -488,24 +483,17 @@
           </div>
         </div>
 
-        <!-- Saved Workout -->
+        <!-- Current Active Workout Display -->
         <div class="card rounded-2xl p-5">
-          <h3 class="font-semibold text-white text-sm mb-3">Today's Saved Gym Session</h3>
+          <h3 class="font-semibold text-white text-sm mb-3">Today's Exercises Breakdown</h3>
           <div id="workoutSummaryDisplay">
-            <p class="text-slate-500 text-xs py-4 text-center">No workout saved yet today. Go to the "Workout Log" tab and click "Save Workout".</p>
+            <p class="text-slate-500 text-xs py-4 text-center">No exercises logged yet. Add exercises in the "Workout Log" tab.</p>
           </div>
         </div>
       </div>
 
       <!-- Right column -->
       <div class="space-y-4">
-        <div class="card rounded-2xl p-4">
-          <h4 class="font-semibold text-white text-xs mb-2">Update Calculations</h4>
-          <button onclick="calculateDailySummary()" class="btn-primary w-full py-2.5 rounded-xl text-xs font-semibold">
-            Refresh Summary
-          </button>
-        </div>
-
         <div class="card rounded-2xl p-4 space-y-2 text-xs">
           <h4 class="font-semibold text-white text-xs mb-1">Daily Food Targets (To Lose Fat)</h4>
           <div id="macroTargets">
@@ -564,11 +552,11 @@ const state = {
   bmi: 0,
   bodyFat: 0,
   exercises: [],
+  workoutDuration: 50,
   workoutCalories: 0,
   stepsCalories: 0,
   walkRunCalories: 0,
   cardioCalories: 0,
-  savedWorkout: null,
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -577,6 +565,7 @@ window.addEventListener('DOMContentLoaded', () => {
     now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
   document.getElementById('workoutDate').value = now.toISOString().split('T')[0];
   renderExercises();
+  calculateDailySummary();
 });
 
 // ─── TAB NAVIGATION ─────────────────────────────
@@ -644,7 +633,7 @@ function calculateBody() {
     badgeEl.className = 'badge badge-orange';
   }
 
-  // 2. Base Calories (Daily living baseline)
+  // 2. Base Calories
   let baseCal;
   if (age) {
     baseCal = gender === 'male'
@@ -667,7 +656,6 @@ function calculateBody() {
     } catch(e) {}
   }
 
-  // Fallback if measurement out of bounds
   if (!bf || bf < 4 || bf > 60 || isNaN(bf)) {
     bf = gender === 'male'
       ? (1.20 * bmi) + (0.23 * (age || 25)) - 16.2
@@ -711,87 +699,60 @@ function renderSimpleFoodTargets(weight, baseCal) {
     </div>`;
 }
 
-// ─── WORKOUT LOGGER ─────────────────────────────
-const SPLIT_NAMES = {
-  push: 'Push Day', pull: 'Pull Day', legs: 'Legs & Abs',
-  upper: 'Upper Body', lower: 'Lower Body', fullbody: 'Full Body', custom: 'Custom Split'
-};
+// ─── TIMETABLE IMAGE UPLOAD & SCANNER (OCR) ──────
+async function handleTimetableUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
 
-const PRESET_EXERCISES = {
-  push: [
-    ['Incline Chest Press', 4, 10, ''],
-    ['Flat Bench Press', 3, 10, ''],
-    ['Pec Deck Fly', 3, 12, ''],
-    ['Cable Crossover', 3, 15, ''],
-    ['Overhead Shoulder Press', 4, 10, ''],
-    ['Lateral Dumbbell Raise', 4, 12, ''],
-    ['Front Dumbbell Raise', 3, 12, ''],
-    ['Tricep Rope Pushdown', 4, 12, ''],
-    ['Overhead Tricep Extension', 3, 12, ''],
-  ],
-  pull: [
-    ['Lat Pulldown', 4, 10, ''],
-    ['Seated Cable Row', 4, 10, ''],
-    ['Barbell Row', 3, 10, ''],
-    ['Face Pulls', 3, 15, ''],
-    ['Rear Shoulder Fly', 3, 12, ''],
-    ['Bicep Dumbbell Curls', 4, 10, ''],
-    ['Hammer Curls', 3, 12, ''],
-    ['Preacher Curls', 3, 10, ''],
-  ],
-  legs: [
-    ['Barbell Squats', 4, 10, ''],
-    ['Leg Press Machine', 4, 12, ''],
-    ['Romanian Deadlift', 3, 10, ''],
-    ['Leg Extension', 3, 12, ''],
-    ['Leg Curls', 3, 12, ''],
-    ['Calf Raises', 4, 15, ''],
-    ['Hanging Leg Raises', 3, 15, ''],
-    ['Cable Crunches', 3, 15, ''],
-    ['Plank Hold', 3, 60, ''],
-  ],
-  upper: [
-    ['Bench Press', 4, 10, ''],
-    ['Lat Pulldown', 4, 10, ''],
-    ['Shoulder Press', 3, 10, ''],
-    ['Seated Cable Row', 3, 10, ''],
-    ['Bicep Curls', 3, 12, ''],
-    ['Tricep Pushdown', 3, 12, ''],
-  ],
-  lower: [
-    ['Squats', 4, 10, ''],
-    ['Leg Press', 4, 12, ''],
-    ['Leg Curls', 3, 12, ''],
-    ['Leg Extension', 3, 12, ''],
-    ['Calf Raises', 4, 15, ''],
-    ['Leg Raises for Abs', 3, 15, ''],
-  ],
-  fullbody: [
-    ['Squats', 3, 10, ''],
-    ['Bench Press', 3, 10, ''],
-    ['Lat Pulldown', 3, 10, ''],
-    ['Shoulder Press', 3, 10, ''],
-    ['Bicep Curls', 2, 12, ''],
-    ['Plank', 3, 60, ''],
-  ],
-};
+  const statusEl = document.getElementById('ocrStatus');
+  statusEl.classList.remove('hidden');
+  statusEl.innerHTML = '<span class="animate-pulse">🔍 Scanning photo for exercises...</span>';
 
-function handleSplitChange() {
-  const val = document.getElementById('splitSelect').value;
-  document.getElementById('customSplitDiv').classList.toggle('hidden', val !== 'custom');
-  document.getElementById('splitLabel').textContent = SPLIT_NAMES[val] || 'Custom';
+  try {
+    // If Tesseract is loaded from CDN
+    if (window.Tesseract) {
+      const result = await Tesseract.recognize(file, 'eng');
+      const text = result.data.text;
+      parseExerciseText(text);
+      statusEl.innerHTML = '<span class="text-emerald-400">✅ Exercises added from image! Now enter sets &amp; reps.</span>';
+    } else {
+      // Fallback
+      parseExerciseText(file.name.replace(/\.[^/.]+$/, ""));
+      statusEl.innerHTML = '<span class="text-emerald-400">✅ Image loaded. You can now fill in details.</span>';
+    }
+  } catch (err) {
+    statusEl.innerHTML = '<span class="text-yellow-400">Could not read text clearly. You can still add rows manually below!</span>';
+  }
+
+  setTimeout(() => {
+    statusEl.classList.add('hidden');
+  }, 5000);
 }
 
-function loadPPLPresets() {
-  const val = document.getElementById('splitSelect').value;
-  const list = PRESET_EXERCISES[val] || PRESET_EXERCISES.push;
-  state.exercises = list.map(([name, sets, reps, weight]) => ({ name, sets, reps, weight }));
+function parseExerciseText(text) {
+  const lines = text.split('\n')
+    .map(l => l.replace(/[^a-zA-Z0-9\s-]/g, '').trim())
+    .filter(l => l.length > 2 && !/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|day|workout|week|routine|sets|reps|time)$/i.test(l));
+
+  if (lines.length > 0) {
+    lines.forEach(name => {
+      // Leave sets, reps, weight empty for user to fill manually!
+      state.exercises.push({ name: name, sets: '', reps: '', weight: '' });
+    });
+  } else {
+    // Sample exercises if image was too blurry
+    ['Incline Press', 'Dumbbell Rows', 'Shoulder Press', 'Bicep Curls'].forEach(name => {
+      state.exercises.push({ name: name, sets: '', reps: '', weight: '' });
+    });
+  }
+
   renderExercises();
   updateWorkoutStats();
 }
 
 function addExerciseRow() {
-  state.exercises.push({ name: '', sets: 3, reps: 10, weight: '' });
+  // Empty sets, reps, and weight for user to type manually
+  state.exercises.push({ name: '', sets: '', reps: '', weight: '' });
   renderExercises();
   updateWorkoutStats();
 }
@@ -814,16 +775,16 @@ function renderExercises() {
   list.innerHTML = state.exercises.map((ex, i) => `
     <div class="exercise-row grid grid-cols-12 gap-1.5 items-center rounded-xl px-2 py-1.5">
       <input type="text" value="${ex.name}" placeholder="Exercise name"
-        oninput="state.exercises[${i}].name=this.value"
+        oninput="state.exercises[${i}].name=this.value; updateWorkoutStats()"
         class="col-span-5 input-field rounded-lg px-2 py-1.5 text-xs" />
-      <input type="number" value="${ex.sets}" min="1" max="20"
-        oninput="state.exercises[${i}].sets=parseInt(this.value)||0;updateWorkoutStats()"
+      <input type="number" value="${ex.sets}" placeholder="Sets" min="1" max="50"
+        oninput="state.exercises[${i}].sets=this.value; updateWorkoutStats()"
         class="col-span-2 input-field rounded-lg px-1 py-1.5 text-xs text-center" />
-      <input type="number" value="${ex.reps}" min="1" max="200"
-        oninput="state.exercises[${i}].reps=parseInt(this.value)||0;updateWorkoutStats()"
+      <input type="number" value="${ex.reps}" placeholder="Reps" min="1" max="200"
+        oninput="state.exercises[${i}].reps=this.value; updateWorkoutStats()"
         class="col-span-2 input-field rounded-lg px-1 py-1.5 text-xs text-center" />
       <input type="text" value="${ex.weight}" placeholder="kg"
-        oninput="state.exercises[${i}].weight=this.value"
+        oninput="state.exercises[${i}].weight=this.value; updateWorkoutStats()"
         class="col-span-2 input-field rounded-lg px-1 py-1.5 text-xs text-center" />
       <button onclick="removeExercise(${i})" class="col-span-1 btn-danger rounded-lg p-1.5 flex items-center justify-center">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -835,6 +796,7 @@ function updateWorkoutStats() {
   const total = state.exercises.length;
   const sets = state.exercises.reduce((sum, e) => sum + (parseInt(e.sets) || 0), 0);
   const dur = parseInt(document.getElementById('workoutDuration').value) || 0;
+  state.workoutDuration = dur;
   const cal = Math.round(dur * 5.5);
   state.workoutCalories = cal;
 
@@ -842,28 +804,7 @@ function updateWorkoutStats() {
   document.getElementById('totalSets').textContent = sets;
   document.getElementById('workoutCalories').textContent = cal + ' kcal';
   document.getElementById('workoutDurationDisplay').textContent = dur + ' min';
-}
 
-function saveWorkout() {
-  if (!state.exercises.length) {
-    alert('Please add at least one exercise first!');
-    return;
-  }
-  const val = document.getElementById('splitSelect').value;
-  const splitName = val === 'custom'
-    ? (document.getElementById('customSplitName').value || 'Custom Split')
-    : SPLIT_NAMES[val];
-  state.savedWorkout = {
-    split: splitName,
-    date: document.getElementById('workoutDate').value,
-    duration: parseInt(document.getElementById('workoutDuration').value) || 0,
-    exercises: [...state.exercises],
-    calories: state.workoutCalories,
-  };
-
-  const toast = document.getElementById('saveSuccess');
-  toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 2500);
   calculateDailySummary();
 }
 
@@ -876,7 +817,7 @@ function updateStepsCalc() {
 
   const stepsCal   = Math.round(steps * 0.04 * (w / 70));
   const walkCal    = Math.round(walkMin * 3.5 * w / 200);
-  const runCal     = Math.round(runMin * 8.0 * w / 200);
+  const runCal     = Math.round(runMin  * 8.0 * w / 200);
   const walkRunCal = walkCal + runCal;
 
   state.stepsCalories   = stepsCal;
@@ -887,6 +828,8 @@ function updateStepsCalc() {
   document.getElementById('stepsProgressBar').style.width = pct + '%';
   document.getElementById('stepsCalories').textContent   = stepsCal;
   document.getElementById('walkRunCalories').textContent = walkRunCal;
+
+  calculateDailySummary();
 }
 
 const CARDIO_RATES = {
@@ -909,22 +852,17 @@ function updateCardioCalc() {
   }
   state.cardioCalories = cal;
   document.getElementById('cardioCaloriesDisplay').textContent = cal;
-}
 
-function saveCardio() {
-  const toast = document.getElementById('cardioSuccess');
-  toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 2500);
   calculateDailySummary();
 }
 
-// ─── DAILY SUMMARY ──────────────────────────────
+// ─── DAILY SUMMARY (UPDATES DYNAMICALLY) ────────
 function calculateDailySummary() {
   const base    = state.baseCalories || 1600;
   const steps   = (state.stepsCalories || 0) + (state.walkRunCalories || 0);
   const cardio  = state.cardioCalories || 0;
   const workout = state.workoutCalories || 0;
-  const daily   = Math.round(base * 0.15); // everyday moving around chores
+  const daily   = Math.round(base * 0.15); // everyday chores
   const total   = base + steps + cardio + workout + daily;
 
   document.getElementById('tdeeTotal').textContent = total.toLocaleString();
@@ -943,25 +881,26 @@ function calculateDailySummary() {
   setBar('tdeeWorkoutVal', workout, 'tdeeWorkoutBar');
   setBar('tdeeDailyVal',   daily,   'tdeeDailyBar');
 
-  // Today's gym session display
-  const ws = state.savedWorkout;
-  if (ws && ws.exercises && ws.exercises.length) {
-    document.getElementById('workoutSummaryDisplay').innerHTML = `
+  // Today's gym session display (reads directly from active exercise rows!)
+  const wsDisplay = document.getElementById('workoutSummaryDisplay');
+  if (state.exercises && state.exercises.length) {
+    wsDisplay.innerHTML = `
       <div class="flex flex-wrap items-center gap-2 mb-3">
-        <span class="badge badge-blue">${ws.split}</span>
-        <span class="text-slate-400 text-xs">${ws.date}</span>
+        <span class="text-slate-400 text-xs">${document.getElementById('workoutDate').value || 'Today'}</span>
         <span class="text-slate-600 text-xs">•</span>
-        <span class="text-slate-400 text-xs">${ws.duration} mins</span>
+        <span class="text-slate-400 text-xs">${state.workoutDuration} mins</span>
         <span class="text-slate-600 text-xs">•</span>
-        <span class="text-sky-400 text-xs font-semibold">${ws.calories} kcal burned</span>
+        <span class="text-sky-400 text-xs font-semibold">${state.workoutCalories} kcal burned</span>
       </div>
       <div class="space-y-1">
-        ${ws.exercises.map(e => `
+        ${state.exercises.map(e => `
           <div class="flex justify-between py-1 border-b border-slate-800 last:border-0 text-xs">
-            <span class="text-slate-300">${e.name || 'Exercise'}</span>
-            <span class="text-slate-400">${e.sets} sets × ${e.reps} reps ${e.weight ? '@ ' + e.weight + 'kg' : ''}</span>
+            <span class="text-slate-300 font-medium">${e.name || 'Exercise'}</span>
+            <span class="text-slate-400">${e.sets ? e.sets + ' sets' : '—'} ${e.reps ? '× ' + e.reps + ' reps' : ''} ${e.weight ? '@ ' + e.weight + 'kg' : ''}</span>
           </div>`).join('')}
       </div>`;
+  } else {
+    wsDisplay.innerHTML = `<p class="text-slate-500 text-xs py-4 text-center">No exercises logged yet. Add exercises in the "Workout Log" tab.</p>`;
   }
 }
 </script>
