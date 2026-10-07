@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitTrack Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' },
+            accent: { 400: '#a78bfa', 500: '#8b5cf6' },
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { background-color: #020617; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+    .tab-btn { transition: all 0.25s ease; }
+    .tab-btn.active { background: linear-gradient(135deg, #0ea5e9, #8b5cf6); color: white; box-shadow: 0 4px 20px rgba(14,165,233,0.35); }
+    .tab-btn:not(.active):hover { background: rgba(30,41,59,0.8); color: #38bdf8; }
+    .card { background: linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95)); border: 1px solid rgba(71,85,105,0.4); backdrop-filter: blur(12px); }
+    .card-glow { box-shadow: 0 0 30px rgba(14,165,233,0.08); }
+    .input-field { background: rgba(15,23,42,0.9); border: 1px solid rgba(71,85,105,0.5); color: #e2e8f0; transition: border-color 0.2s, box-shadow 0.2s; }
+    .input-field:focus { outline: none; border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.15); }
+    .btn-primary { background: linear-gradient(135deg, #0ea5e9, #8b5cf6); color: white; transition: all 0.2s; cursor: pointer; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(14,165,233,0.3); }
+    .btn-secondary { background: rgba(30,41,59,0.9); border: 1px solid rgba(71,85,105,0.5); color: #94a3b8; transition: all 0.2s; cursor: pointer; }
+    .btn-secondary:hover { border-color: #0ea5e9; color: #38bdf8; }
+    .btn-danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #f87171; transition: all 0.2s; cursor: pointer; }
+    .btn-danger:hover { background: rgba(239,68,68,0.25); }
+    .stat-card { background: rgba(30,41,59,0.6); border: 1px solid rgba(71,85,105,0.3); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-green  { background: rgba(16,185,129,0.2);  color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-yellow { background: rgba(245,158,11,0.2);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+    .badge-orange { background: rgba(249,115,22,0.2);  color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
+    .badge-red    { background: rgba(239,68,68,0.2);   color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-blue   { background: rgba(14,165,233,0.2);  color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); }
+    .progress-bar  { height: 6px; border-radius: 9999px; background: rgba(71,85,105,0.4); overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 9999px; background: linear-gradient(90deg, #0ea5e9, #8b5cf6); transition: width 0.6s ease; }
+    .mentor-card { border-left: 3px solid; padding: 1rem; }
+    .mc-blue   { border-color: #0ea5e9; background: rgba(14,165,233,0.05); }
+    .mc-purple { border-color: #8b5cf6; background: rgba(139,92,246,0.05); }
+    .mc-green  { border-color: #10b981; background: rgba(16,185,129,0.05); }
+    .mc-amber  { border-color: #f59e0b; background: rgba(245,158,11,0.05); }
+    .mc-red    { border-color: #ef4444; background: rgba(239,68,68,0.05); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    .gradient-text { background: linear-gradient(135deg, #38bdf8, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    select option { background: #1e293b; }
+    .exercise-row:nth-child(odd)  { background: rgba(15,23,42,0.5); }
+    .exercise-row:nth-child(even) { background: rgba(30,41,59,0.3); }
+    @media (max-width: 767px) { .nav-desktop { display: none !important; } .main-content { padding-bottom: 84px; } }
+    @media (min-width: 768px) { .nav-mobile { display: none !important; } }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ── HEADER ─────────────────────────────────────────── -->
+<header class="sticky top-0 z-40 border-b border-slate-700/50 backdrop-blur-xl" style="background:rgba(2,6,23,0.94)">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#0ea5e9,#8b5cf6)">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-extrabold gradient-text leading-none">FitTrack Pro</h1>
+        <p class="text-xs text-slate-500 leading-none mt-0.5">Your Smart Fitness Companion</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="currentDate" class="text-xs text-slate-500 hidden sm:block"></span>
+      <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+      <span class="text-xs text-emerald-400 font-semibold">Active</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── DESKTOP NAV ────────────────────────────────────── -->
+<nav class="nav-desktop max-w-6xl mx-auto px-4 pt-5 pb-2 flex gap-2 flex-wrap">
+  <button onclick="showTab('profile')" class="tab-btn active px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2" data-tab="profile">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke-width="2"/><path stroke-width="2" stroke-linecap="round" d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    Profile &amp; Body
+  </button>
+  <button onclick="showTab('workout')" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2" data-tab="workout">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h3m0 0l2-4 2 8 2-4 2 4 2-8 2 4h3"/></svg>
+    Workout Logger
+  </button>
+  <button onclick="showTab('cardio')" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2" data-tab="cardio">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5.5A6.5 6.5 0 106.5 12H3m13.5-6.5l2 2-2 2"/></svg>
+    Steps &amp; Cardio
+  </button>
+  <button onclick="showTab('tdee')" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2" data-tab="tdee">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+    TDEE Summary
+  </button>
+  <button onclick="showTab('mentor')" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2" data-tab="mentor">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    Pro Mentor
+  </button>
+</nav>
+
+<!-- ── MAIN ───────────────────────────────────────────── -->
+<main class="main-content max-w-6xl mx-auto px-4 py-6">
+
+  <!-- ════════════ TAB 1: PROFILE ════════════ -->
+  <section id="tab-profile" class="tab-content active">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-white">Profile &amp; Body Composition</h2>
+      <p class="text-slate-400 text-sm mt-1">Calculate BMI, BMR, and Body Fat % with proven scientific formulas</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Input Card -->
+      <div class="card card-glow rounded-2xl p-6">
+        <h3 class="text-base font-semibold text-white mb-5 flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg flex items-center justify-center text-base" style="background:linear-gradient(135deg,#0ea5e9,#8b5cf6)">📋</span>
+          Your Measurements
+        </h3>
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Age (years)</label>
+              <input type="number" id="age" placeholder="25" min="10" max="100" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Gender</label>
+              <select id="gender" onchange="toggleHip()" class="input-field w-full rounded-xl px-3 py-2.5 text-sm">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Weight (kg)</label>
+              <input type="number" id="weight" placeholder="70" step="0.1" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Height (cm)</label>
+              <input type="number" id="height" placeholder="175" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5 font-medium">Neck Circumference (cm)</label>
+            <input type="number" id="neck" placeholder="37" step="0.1" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+            <p class="text-xs text-slate-500 mt-1">Measure below the larynx, at the narrowest point</p>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5 font-medium">Waist Circumference (cm)</label>
+            <input type="number" id="waist" placeholder="80" step="0.1" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+            <p class="text-xs text-slate-500 mt-1">Measure at the navel level</p>
+          </div>
+          <div id="hipRow" class="hidden">
+            <label class="block text-xs text-slate-400 mb-1.5 font-medium">Hip Circumference (cm) <span class="text-slate-500">— Females only</span></label>
+            <input type="number" id="hip" placeholder="95" step="0.1" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+          </div>
+          <button onclick="calculateBody()" class="btn-primary w-full py-3 rounded-xl font-semibold text-sm">
+            🧮 Calculate Body Composition
+          </button>
+        </div>
+      </div>
+
+      <!-- Results Column -->
+      <div class="space-y-4">
+        <!-- BMI -->
+        <div class="card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-semibold text-white text-sm">Body Mass Index (BMI)</h4>
+            <span id="bmiBadge" class="badge badge-blue">—</span>
+          </div>
+          <div class="flex items-end gap-2 mb-3">
+            <span id="bmiValue" class="text-4xl font-bold gradient-text">—</span>
+            <span class="text-slate-500 text-sm mb-1">kg/m²</span>
+          </div>
+          <div class="progress-bar">
+            <div id="bmiBar" class="progress-fill" style="width:0%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-slate-600 mt-1.5">
+            <span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span>
+          </div>
+        </div>
+
+        <!-- BMR -->
+        <div class="card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-semibold text-white text-sm">Basal Metabolic Rate (BMR)</h4>
+            <span class="badge badge-blue">Mifflin-St Jeor</span>
+          </div>
+          <div class="flex items-end gap-2">
+            <span id="bmrValue" class="text-4xl font-bold text-sky-400">—</span>
+            <span class="text-slate-500 text-sm mb-1">kcal/day</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">Calories your body needs at complete rest — your survival baseline</p>
+        </div>
+
+        <!-- Body Fat / LBM / Fat Mass -->
+        <div class="card rounded-2xl p-5">
+          <h4 class="font-semibold text-white text-sm mb-4">Body Composition Breakdown</h4>
+          <div class="grid grid-cols-3 gap-3 mb-3">
+            <div class="stat-card rounded-xl p-3 text-center">
+              <div id="bfValue" class="text-2xl font-bold text-violet-400">—</div>
+              <div class="text-xs text-slate-500 mt-0.5">Body Fat %</div>
+            </div>
+            <div class="stat-card rounded-xl p-3 text-center">
+              <div id="fatMassValue" class="text-2xl font-bold text-orange-400">—</div>
+              <div class="text-xs text-slate-500 mt-0.5">Fat Mass kg</div>
+            </div>
+            <div class="stat-card rounded-xl p-3 text-center">
+              <div id="lbmValue" class="text-2xl font-bold text-emerald-400">—</div>
+              <div class="text-xs text-slate-500 mt-0.5">Lean Mass kg</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-600 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-sky-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            US Navy circumference method · Deurenberg fallback if values are invalid
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reference Table -->
+    <div class="card rounded-2xl p-5 mt-6">
+      <h3 class="font-semibold text-white mb-4 text-sm">BMI &amp; Body Fat Reference Ranges</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[400px]">
+          <thead>
+            <tr class="border-b border-slate-700">
+              <th class="text-left text-slate-400 font-medium pb-2 pr-4">Category</th>
+              <th class="text-left text-slate-400 font-medium pb-2 pr-4">BMI</th>
+              <th class="text-left text-slate-400 font-medium pb-2 pr-4">BF% Men</th>
+              <th class="text-left text-slate-400 font-medium pb-2">BF% Women</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800 text-xs">
+            <tr><td class="py-2 pr-4 text-sky-400 font-medium">Essential Fat</td><td class="py-2 pr-4 text-slate-300">—</td><td class="py-2 pr-4 text-slate-300">2–5%</td><td class="py-2 text-slate-300">10–13%</td></tr>
+            <tr><td class="py-2 pr-4 text-emerald-400 font-medium">Athletic</td><td class="py-2 pr-4 text-slate-300">18.5–24.9</td><td class="py-2 pr-4 text-slate-300">6–13%</td><td class="py-2 text-slate-300">14–20%</td></tr>
+            <tr><td class="py-2 pr-4 text-green-400 font-medium">Fitness / Normal</td><td class="py-2 pr-4 text-slate-300">18.5–24.9</td><td class="py-2 pr-4 text-slate-300">14–17%</td><td class="py-2 text-slate-300">21–24%</td></tr>
+            <tr><td class="py-2 pr-4 text-yellow-400 font-medium">Overweight</td><td class="py-2 pr-4 text-slate-300">25.0–29.9</td><td class="py-2 pr-4 text-slate-300">18–24%</td><td class="py-2 text-slate-300">25–31%</td></tr>
+            <tr><td class="py-2 pr-4 text-orange-400 font-medium">Obese</td><td class="py-2 pr-4 text-slate-300">30.0–34.9</td><td class="py-2 pr-4 text-slate-300">25–31%</td><td class="py-2 text-slate-300">32–39%</td></tr>
+            <tr><td class="py-2 pr-4 text-red-400 font-medium">Severely Obese</td><td class="py-2 pr-4 text-slate-300">&gt;35.0</td><td class="py-2 pr-4 text-slate-300">&gt;31%</td><td class="py-2 text-slate-300">&gt;39%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ TAB 2: WORKOUT LOGGER ════════════ -->
+  <section id="tab-workout" class="tab-content">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-white">Workout &amp; Exercise Logger</h2>
+      <p class="text-slate-400 text-sm mt-1">Log your split, exercises, sets, reps, and weight</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Config Panel -->
+      <div class="lg:col-span-1 space-y-4">
+        <div class="card rounded-2xl p-5">
+          <h3 class="font-semibold text-white mb-4 text-sm flex items-center gap-2"><span>🏋️</span> Session Config</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Workout Split</label>
+              <select id="splitSelect" onchange="handleSplitChange()" class="input-field w-full rounded-xl px-3 py-2.5 text-sm">
+                <option value="push">Push (Chest · Shoulders · Triceps)</option>
+                <option value="pull">Pull (Back · Biceps)</option>
+                <option value="legs">Legs &amp; Core</option>
+                <option value="upper">Upper Body</option>
+                <option value="lower">Lower Body</option>
+                <option value="fullbody">Full Body</option>
+                <option value="custom">✏️ Custom Split</option>
+              </select>
+            </div>
+            <div id="customSplitDiv" class="hidden">
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Custom Split Name</label>
+              <input type="text" id="customSplitName" placeholder="e.g. Arms &amp; Abs" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Date</label>
+              <input type="date" id="workoutDate" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Duration (minutes)</label>
+              <input type="number" id="workoutDuration" placeholder="60" oninput="updateWorkoutStats()" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <button onclick="loadPPLPresets()" class="btn-secondary w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              Load PPL Presets
+            </button>
+            <button onclick="addExerciseRow()" class="btn-primary w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Add Exercise
+            </button>
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-5">
+          <h3 class="font-semibold text-white mb-3 text-sm">📊 Session Stats</h3>
+          <div class="space-y-2.5 text-sm">
+            <div class="flex justify-between"><span class="text-slate-400">Total Exercises</span><span id="totalExercises" class="text-white font-semibold">0</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Total Sets</span><span id="totalSets" class="text-white font-semibold">0</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Est. Calories</span><span id="workoutCalories" class="text-sky-400 font-semibold">0 kcal</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Duration</span><span id="workoutDurationDisplay" class="text-white font-semibold">0 min</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exercise Table -->
+      <div class="lg:col-span-2 space-y-4">
+        <div class="card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <h3 class="font-semibold text-white text-sm flex items-center gap-2">
+              <span id="splitLabel" class="badge badge-blue">Push Day</span>
+              Exercises
+            </h3>
+            <button onclick="saveWorkout()" class="btn-primary px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 flex-shrink-0">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Save Workout
+            </button>
+          </div>
+          <!-- Column headers -->
+          <div class="grid grid-cols-12 gap-2 text-xs text-slate-500 font-medium px-2 mb-2 uppercase tracking-wide">
+            <div class="col-span-5">Exercise</div>
+            <div class="col-span-2 text-center">Sets</div>
+            <div class="col-span-2 text-center">Reps</div>
+            <div class="col-span-2 text-center">Wt (kg)</div>
+            <div class="col-span-1"></div>
+          </div>
+          <div id="exerciseList" class="space-y-1 min-h-24"></div>
+          <div id="emptyState" class="text-center py-10 text-slate-600">
+            <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            <p class="text-sm">No exercises yet.</p>
+            <p class="text-xs mt-1">Click "Add Exercise" or load PPL presets</p>
+          </div>
+          <div id="saveSuccess" class="hidden mt-4 p-3 rounded-xl text-sm font-medium text-center" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#34d399">
+            ✅ Workout saved successfully!
+          </div>
+        </div>
+
+        <!-- PPL Reference -->
+        <div class="card rounded-2xl p-5">
+          <h3 class="font-semibold text-white mb-4 text-sm">📚 PPL Exercise Reference</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div>
+              <div class="text-sky-400 font-semibold mb-2 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span> PUSH</div>
+              <ul class="space-y-1 text-slate-400 leading-relaxed">
+                <li>Incline Chest Press</li><li>Flat Chest Press</li><li>Pec Deck / Fly</li><li>Cable Crossover</li>
+                <li>Flat Bench Press</li><li>Overhead Press</li><li>Lateral Raise</li><li>Front Raise</li>
+                <li>Triceps Pushdown</li><li>Overhead Tricep Ext.</li><li>Kickbacks</li>
+              </ul>
+            </div>
+            <div>
+              <div class="text-violet-400 font-semibold mb-2 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-violet-400 inline-block"></span> PULL</div>
+              <ul class="space-y-1 text-slate-400 leading-relaxed">
+                <li>Lat Pulldown</li><li>Seated Cable Row</li><li>Barbell Row</li><li>Face Pulls</li>
+                <li>Rear Delt Fly</li><li>Bicep Curl</li><li>Hammer Curl</li><li>Preacher Curl</li>
+                <li>Concentration Curl</li><li>Pull-ups</li>
+              </ul>
+            </div>
+            <div>
+              <div class="text-emerald-400 font-semibold mb-2 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> LEGS &amp; CORE</div>
+              <ul class="space-y-1 text-slate-400 leading-relaxed">
+                <li>Squats</li><li>Leg Press</li><li>Romanian Deadlift</li><li>Leg Extension</li>
+                <li>Leg Curl</li><li>Calf Raises</li><li>Hanging Leg Raises</li><li>Cable Crunches</li>
+                <li>Plank</li><li>Russian Twists</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ TAB 3: STEPS & CARDIO ════════════ -->
+  <section id="tab-cardio" class="tab-content">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-white">Steps &amp; Cardio Tracker</h2>
+      <p class="text-slate-400 text-sm mt-1">Log daily movement and dedicated cardio sessions for automatic calorie estimation</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Steps Card -->
+      <div class="card card-glow rounded-2xl p-6">
+        <h3 class="font-semibold text-white mb-5 flex items-center gap-2 text-base"><span class="text-2xl">👟</span> Daily Steps &amp; Walking</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5 font-medium">Daily Steps Count</label>
+            <input type="number" id="stepsCount" placeholder="8000" oninput="updateStepsCalc()" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5 font-medium">Walking Duration (minutes)</label>
+            <input type="number" id="walkDuration" placeholder="30" oninput="updateStepsCalc()" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5 font-medium">Running Duration (minutes)</label>
+            <input type="number" id="runDuration" placeholder="0" oninput="updateStepsCalc()" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+          </div>
+
+          <!-- Progress -->
+          <div class="stat-card rounded-xl p-4">
+            <div class="flex justify-between text-sm mb-2">
+              <span class="text-slate-400">Goal: 10,000 steps</span>
+              <span id="stepsPercentText" class="text-sky-400 font-semibold">0%</span>
+            </div>
+            <div class="progress-bar"><div id="stepsProgressBar" class="progress-fill" style="width:0%"></div></div>
+            <div class="mt-3 grid grid-cols-2 gap-3 text-center">
+              <div>
+                <div id="stepsCalories" class="text-2xl font-bold text-sky-400">0</div>
+                <div class="text-xs text-slate-500">kcal from steps</div>
+              </div>
+              <div>
+                <div id="walkRunCalories" class="text-2xl font-bold text-emerald-400">0</div>
+                <div class="text-xs text-slate-500">kcal walk / run</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Benchmarks -->
+          <div class="grid grid-cols-3 gap-2 text-xs text-center">
+            <div class="stat-card rounded-lg p-2"><div class="text-yellow-400 font-bold">5,000</div><div class="text-slate-500">Sedentary</div></div>
+            <div class="stat-card rounded-lg p-2"><div class="text-emerald-400 font-bold">10,000</div><div class="text-slate-500">Active Goal</div></div>
+            <div class="stat-card rounded-lg p-2"><div class="text-sky-400 font-bold">15,000+</div><div class="text-slate-500">Very Active</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cardio + Coffee -->
+      <div class="space-y-5">
+        <div class="card rounded-2xl p-6">
+          <h3 class="font-semibold text-white mb-5 flex items-center gap-2 text-base"><span class="text-2xl">🔥</span> Dedicated Cardio</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Cardio Type</label>
+              <select id="cardioType" onchange="updateCardioCalc()" class="input-field w-full rounded-xl px-3 py-2.5 text-sm">
+                <option value="treadmill">🏃 Treadmill / Running</option>
+                <option value="cycling">🚴 Cycling / Stationary Bike</option>
+                <option value="elliptical">⚡ Elliptical Trainer</option>
+                <option value="rowing">🚣 Rowing Machine</option>
+                <option value="swimming">🏊 Swimming</option>
+                <option value="hiit">💥 HIIT / Circuit Training</option>
+                <option value="jumprope">🪢 Jump Rope</option>
+                <option value="stairmaster">🪜 StairMaster</option>
+                <option value="manual">✍️ Enter Manually</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Duration (minutes)</label>
+              <input type="number" id="cardioDuration" placeholder="30" oninput="updateCardioCalc()" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div id="manualCardioDiv" class="hidden">
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Manual Calories Burned</label>
+              <input type="number" id="manualCardioCalories" placeholder="250" oninput="updateCardioCalc()" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div class="stat-card rounded-xl p-4 text-center">
+              <div id="cardioCaloriesDisplay" class="text-3xl font-bold text-orange-400">0</div>
+              <div class="text-xs text-slate-500 mt-1">Estimated kcal burned</div>
+            </div>
+            <button onclick="saveCardio()" class="btn-primary w-full py-2.5 rounded-xl text-sm font-semibold">💾 Save Cardio Session</button>
+            <div id="cardioSuccess" class="hidden p-3 rounded-xl text-sm font-medium text-center" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#34d399">
+              ✅ Cardio session saved!
+            </div>
+          </div>
+        </div>
+
+        <!-- Black Coffee Card -->
+        <div class="card rounded-2xl p-5" style="border-color:rgba(245,158,11,0.35);background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(30,41,59,0.97))">
+          <div class="flex items-start gap-3">
+            <span class="text-2xl flex-shrink-0">☕</span>
+            <div>
+              <h4 class="font-semibold text-yellow-400 text-sm mb-1.5">Pro Tip: Pre-Workout Black Coffee</h4>
+              <p class="text-slate-400 text-xs leading-relaxed">Drink <strong class="text-white">1–2 cups of black coffee</strong> 30–45 min before cardio. Caffeine mobilizes fatty acids from fat stores, boosting fat oxidation by up to <strong class="text-yellow-400">30%</strong>. Zero sugar, zero milk — keep it black!</p>
+              <div class="flex flex-wrap gap-2 mt-3">
+                <span class="badge badge-yellow">⚡ Energy Boost</span>
+                <span class="badge badge-yellow">🔥 Fat Mobilization</span>
+                <span class="badge badge-yellow">🧠 Mental Focus</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ TAB 4: TDEE SUMMARY ════════════ -->
+  <section id="tab-tdee" class="tab-content">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-white">TDEE &amp; Daily Summary</h2>
+      <p class="text-slate-400 text-sm mt-1">Your complete daily energy expenditure breakdown</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Left 2/3 -->
+      <div class="lg:col-span-2 space-y-5">
+        <!-- Big TDEE -->
+        <div class="card card-glow rounded-2xl p-7 text-center" style="background:linear-gradient(135deg,rgba(14,165,233,0.12),rgba(139,92,246,0.08),rgba(30,41,59,0.97));border-color:rgba(14,165,233,0.3)">
+          <p class="text-slate-400 text-sm mb-1">Total Daily Energy Expenditure</p>
+          <div id="tdeeTotal" class="text-6xl font-extrabold gradient-text my-2">—</div>
+          <p class="text-slate-500 text-sm">kcal / day</p>
+          <div class="flex justify-center gap-3 mt-5 flex-wrap">
+            <div class="stat-card rounded-xl px-4 py-2.5 text-center">
+              <div id="tdeeDeficit" class="text-sm font-bold text-emerald-400">—</div>
+              <div class="text-xs text-slate-500">Fat Loss (−500 kcal)</div>
+            </div>
+            <div class="stat-card rounded-xl px-4 py-2.5 text-center">
+              <div id="tdeeMaintain" class="text-sm font-bold text-sky-400">—</div>
+              <div class="text-xs text-slate-500">Maintenance</div>
+            </div>
+            <div class="stat-card rounded-xl px-4 py-2.5 text-center">
+              <div id="tdeeSurplus" class="text-sm font-bold text-violet-400">—</div>
+              <div class="text-xs text-slate-500">Muscle Gain (+300 kcal)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown Bars -->
+        <div class="card rounded-2xl p-6">
+          <h3 class="font-semibold text-white mb-5 text-sm">Calorie Source Breakdown</h3>
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between text-sm mb-1.5">
+                <span class="text-slate-400 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#0ea5e9"></span> BMR (Resting)</span>
+                <span id="tdeeBMRVal" class="text-white font-medium">0 kcal</span>
+              </div>
+              <div class="progress-bar"><div id="tdeeBMRBar" class="progress-fill" style="width:0%;background:#0ea5e9"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1.5">
+                <span class="text-slate-400 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#34d399"></span> Steps &amp; Walking</span>
+                <span id="tdeeStepsVal" class="text-white font-medium">0 kcal</span>
+              </div>
+              <div class="progress-bar"><div id="tdeeStepsBar" class="progress-fill" style="width:0%;background:#34d399"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1.5">
+                <span class="text-slate-400 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#fb923c"></span> Cardio Sessions</span>
+                <span id="tdeeCardioVal" class="text-white font-medium">0 kcal</span>
+              </div>
+              <div class="progress-bar"><div id="tdeeCardioBar" class="progress-fill" style="width:0%;background:#fb923c"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1.5">
+                <span class="text-slate-400 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#a78bfa"></span> Weight Lifting</span>
+                <span id="tdeeWorkoutVal" class="text-white font-medium">0 kcal</span>
+              </div>
+              <div class="progress-bar"><div id="tdeeWorkoutBar" class="progress-fill" style="width:0%;background:#a78bfa"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1.5">
+                <span class="text-slate-400 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#fbbf24"></span> NEAT (Daily Activities)</span>
+                <span id="tdeeNEATVal" class="text-white font-medium">0 kcal</span>
+              </div>
+              <div class="progress-bar"><div id="tdeeNEATBar" class="progress-fill" style="width:0%;background:#fbbf24"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Workout Summary -->
+        <div class="card rounded-2xl p-6">
+          <h3 class="font-semibold text-white mb-4 text-sm">📋 Today's Logged Workout</h3>
+          <div id="workoutSummaryDisplay">
+            <p class="text-slate-500 text-sm text-center py-8">No workout saved yet. Go to Workout Logger tab and click "Save Workout".</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right 1/3 -->
+      <div class="space-y-4">
+        <div class="card rounded-2xl p-5">
+          <h3 class="font-semibold text-white mb-3 text-sm">⚡ Recalculate TDEE</h3>
+          <p class="text-slate-500 text-xs mb-4">Aggregates data from all tabs (profile, workout, cardio)</p>
+          <button onclick="calculateTDEE()" class="btn-primary w-full py-3 rounded-xl font-semibold text-sm">🔄 Update TDEE Now</button>
+        </div>
+
+        <div class="card rounded-2xl p-5">
+          <h3 class="font-semibold text-white mb-4 text-sm">📊 Activity Multipliers</h3>
+          <div class="space-y-2 text-xs divide-y divide-slate-800">
+            <div class="flex justify-between py-1.5"><span class="text-slate-400">Sedentary (desk job)</span><span class="text-slate-300 font-medium">×1.2</span></div>
+            <div class="flex justify-between py-1.5"><span class="text-slate-400">Lightly Active (1–3 days)</span><span class="text-slate-300 font-medium">×1.375</span></div>
+            <div class="flex justify-between py-1.5"><span class="text-slate-400">Moderately Active (3–5)</span><span class="text-slate-300 font-medium">×1.55</span></div>
+            <div class="flex justify-between py-1.5"><span class="text-slate-400">Very Active (6–7 days)</span><span class="text-slate-300 font-medium">×1.725</span></div>
+            <div class="flex justify-between py-1.5"><span class="text-slate-400">Extra Active (athlete)</span><span class="text-slate-300 font-medium">×1.9</span></div>
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-5">
+          <h3 class="font-semibold text-white mb-3 text-sm">🥩 Macro Targets</h3>
+          <div id="macroTargets"><p class="text-slate-500 text-xs">Calculate your profile first to see macro targets.</p></div>
+        </div>
+
+        <div class="card rounded-2xl p-5">
+          <h3 class="font-semibold text-white mb-3 text-sm">📉 Weight Prediction</h3>
+          <div class="space-y-2 text-xs">
+            <div class="stat-card rounded-lg p-2.5 flex justify-between"><span class="text-slate-400">At −500 kcal/day</span><span class="text-emerald-400 font-semibold">−0.5 kg/week</span></div>
+            <div class="stat-card rounded-lg p-2.5 flex justify-between"><span class="text-slate-400">At −1000 kcal/day</span><span class="text-sky-400 font-semibold">−1 kg/week</span></div>
+            <div class="stat-card rounded-lg p-2.5 flex justify-between"><span class="text-slate-400">At +300 kcal/day</span><span class="text-violet-400 font-semibold">+0.3 kg/week</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ TAB 5: PRO MENTOR ════════════ -->
+  <section id="tab-mentor" class="tab-content">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-white">Pro Mentor &amp; Beginner Guide</h2>
+      <p class="text-slate-400 text-sm mt-1">Science-backed, expert guidance — from Day 1 to Year 3</p>
+    </div>
+
+    <!-- Hero -->
+    <div class="card card-glow rounded-2xl p-6 mb-6" style="background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(139,92,246,0.1),rgba(30,41,59,0.97));border-color:rgba(14,165,233,0.3)">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div class="text-5xl flex-shrink-0">🏆</div>
+        <div>
+          <h3 class="text-xl font-bold text-white mb-1">Your Virtual Fitness Coach</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Practical fitness advice distilled from thousands of hours of research, elite coaching, and real-world results. Whether you're on Day 1 or Year 3 — this guide is built for you.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+
+      <!-- 1: Why PPL -->
+      <div class="card rounded-2xl p-6">
+        <div class="flex items-start gap-4 mb-5">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style="background:rgba(14,165,233,0.15);border:1px solid rgba(14,165,233,0.3)">💡</div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Why PPL (Push/Pull/Legs) is the #1 Split for Beginners</h3>
+            <p class="text-slate-400 text-sm mt-0.5">The most effective and sustainable training framework proven by science and athletes worldwide</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div class="mentor-card mc-blue rounded-xl">
+            <h4 class="text-sky-400 font-semibold text-sm mb-2">🔵 What is PPL?</h4>
+            <p class="text-slate-400 text-xs leading-relaxed">PPL stands for <strong class="text-white">Push, Pull, Legs</strong>. You rotate between:<br><br>
+              • <strong class="text-sky-400">PUSH</strong>: Chest, Shoulders, Triceps<br>
+              • <strong class="text-violet-400">PULL</strong>: Back, Biceps, Rear Delts<br>
+              • <strong class="text-emerald-400">LEGS</strong>: Quads, Hamstrings, Glutes, Calves + Core
+            </p>
+          </div>
+          <div class="mentor-card mc-purple rounded-xl">
+            <h4 class="text-violet-400 font-semibold text-sm mb-2">⚡ Why It Works</h4>
+            <ul class="text-slate-400 text-xs space-y-1.5 leading-relaxed">
+              <li>✅ Each muscle group trained <strong class="text-white">2× per week</strong> — proven optimal for hypertrophy</li>
+              <li>✅ Compound movements = maximum muscle recruitment</li>
+              <li>✅ Logical grouping = less fatigue, better recovery</li>
+              <li>✅ Scales from 3-day beginner to 6-day advanced</li>
+              <li>✅ Used by elite bodybuilders and strength athletes</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mentor-card mc-green rounded-xl">
+          <h4 class="text-emerald-400 font-semibold text-sm mb-3">📅 Recommended 6-Day PPL Schedule</h4>
+          <div class="grid grid-cols-7 gap-1 text-center text-xs mt-1">
+            <div class="rounded-lg p-2" style="background:rgba(14,165,233,0.15)"><div class="text-sky-400 font-bold">MON</div><div class="text-slate-400">Push</div></div>
+            <div class="rounded-lg p-2" style="background:rgba(139,92,246,0.15)"><div class="text-violet-400 font-bold">TUE</div><div class="text-slate-400">Pull</div></div>
+            <div class="rounded-lg p-2" style="background:rgba(16,185,129,0.15)"><div class="text-emerald-400 font-bold">WED</div><div class="text-slate-400">Legs</div></div>
+            <div class="rounded-lg p-2" style="background:rgba(71,85,105,0.2)"><div class="text-slate-500 font-bold">THU</div><div class="text-slate-600">Rest</div></div>
+            <div class="rounded-lg p-2" style="background:rgba(14,165,233,0.15)"><div class="text-sky-400 font-bold">FRI</div><div class="text-slate-400">Push</div></div>
+            <div class="rounded-lg p-2" style="background:rgba(139,92,246,0.15)"><div class="text-violet-400 font-bold">SAT</div><div class="text-slate-400">Pull</div></div>
+            <div class="rounded-lg p-2" style="background:rgba(16,185,129,0.15)"><div class="text-emerald-400 font-bold">SUN</div><div class="text-slate-400">Legs</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2: Belly Fat -->
+      <div class="card rounded-2xl p-6">
+        <div class="flex items-start gap-4 mb-5">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.3)">🔥</div>
+          <div>
+            <h3 class="text-lg font-bold text-white">The Truth About Losing Belly Fat</h3>
+            <p class="text-slate-400 text-sm mt-0.5">Evidence-based steps to eliminate stubborn abdominal fat</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div class="mentor-card mc-red rounded-xl">
+            <div class="text-2xl mb-2">❌</div>
+            <h4 class="text-red-400 font-semibold text-sm mb-2">The Myth</h4>
+            <p class="text-slate-400 text-xs leading-relaxed">"Doing 100 crunches daily gives you a flat stomach." — <strong class="text-white">FALSE.</strong><br><br><strong class="text-red-400">Spot reduction doesn't exist.</strong> You cannot choose where your body burns fat from.</p>
+          </div>
+          <div class="mentor-card mc-amber rounded-xl">
+            <div class="text-2xl mb-2">✅</div>
+            <h4 class="text-yellow-400 font-semibold text-sm mb-2">The Truth</h4>
+            <p class="text-slate-400 text-xs leading-relaxed">Fat loss is a <strong class="text-white">systemic process</strong>. The body loses fat from everywhere — belly tends to come off last for most people.<br><br>Only path: <strong class="text-yellow-400">Caloric Deficit + Strength Training</strong></p>
+          </div>
+          <div class="mentor-card mc-green rounded-xl">
+            <div class="text-2xl mb-2">🎯</div>
+            <h4 class="text-emerald-400 font-semibold text-sm mb-2">Action Plan</h4>
+            <ul class="text-slate-400 text-xs space-y-1 leading-relaxed">
+              <li>• Eat 300–500 kcal below TDEE</li>
+              <li>• Lift weights 3–6×/week</li>
+              <li>• Walk 8,000–12,000 steps/day</li>
+              <li>• Sleep 7–9 hours (manages cortisol)</li>
+              <li>• Cut ultra-processed foods</li>
+              <li>• Be patient — consistency wins</li>
+            </ul>
+          </div>
+        </div>
+        <div class="rounded-xl p-4" style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2)">
+          <h4 class="text-orange-400 font-semibold text-sm mb-2">🧠 Why Belly Fat is the Last to Go</h4>
+          <p class="text-slate-400 text-xs leading-relaxed">Visceral and subcutaneous abdominal fat cells have a higher density of <strong class="text-white">alpha-2 adrenergic receptors</strong>, which inhibit fat mobilization. This is why consistent training (especially fasted cardio after black coffee) and a sustained caloric deficit are required to finally crack this stubborn zone. Don't quit — it comes off eventually with enough time and consistency.</p>
+        </div>
+      </div>
+
+      <!-- 3: Black Coffee -->
+      <div class="card rounded-2xl p-6">
+        <div class="flex items-start gap-4 mb-5">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3)">☕</div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Black Coffee — The Legal Fat-Loss Supplement</h3>
+            <p class="text-slate-400 text-sm mt-0.5">How caffeine supercharges fat mobilization and performance</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div class="space-y-3">
+            <div class="mentor-card mc-amber rounded-xl">
+              <h4 class="text-yellow-400 font-semibold text-xs mb-1.5">⚗️ How Caffeine Works</h4>
+              <p class="text-slate-400 text-xs leading-relaxed">Caffeine blocks adenosine receptors, elevating epinephrine (adrenaline). This triggers <strong class="text-white">lipolysis</strong> — releasing free fatty acids from fat cells into the bloodstream to be burned as fuel during exercise.</p>
+            </div>
+            <div class="mentor-card mc-amber rounded-xl">
+              <h4 class="text-yellow-400 font-semibold text-xs mb-1.5">🔬 The Science</h4>
+              <p class="text-slate-400 text-xs leading-relaxed">Studies confirm caffeine increases fat oxidation by <strong class="text-yellow-400">20–30%</strong> during exercise. It also improves muscular endurance, peak power output, and sustained mental focus.</p>
+            </div>
+          </div>
+          <div class="mentor-card mc-amber rounded-xl">
+            <h4 class="text-yellow-400 font-semibold text-sm mb-3">📋 The Protocol</h4>
+            <div class="space-y-2 text-xs">
+              <div class="flex items-start gap-2"><span class="text-yellow-400 font-bold w-5 flex-shrink-0">1.</span><span class="text-slate-400">Drink <strong class="text-white">1–2 cups black coffee</strong> — no milk, no sugar</span></div>
+              <div class="flex items-start gap-2"><span class="text-yellow-400 font-bold w-5 flex-shrink-0">2.</span><span class="text-slate-400">Wait <strong class="text-white">30–45 minutes</strong> for peak caffeine levels</span></div>
+              <div class="flex items-start gap-2"><span class="text-yellow-400 font-bold w-5 flex-shrink-0">3.</span><span class="text-slate-400">Begin <strong class="text-white">fasted cardio</strong> or your weight training session</span></div>
+              <div class="flex items-start gap-2"><span class="text-yellow-400 font-bold w-5 flex-shrink-0">4.</span><span class="text-slate-400">Optimal dose: <strong class="text-white">3–6 mg per kg bodyweight</strong></span></div>
+              <div class="flex items-start gap-2"><span class="text-yellow-400 font-bold w-5 flex-shrink-0">5.</span><span class="text-slate-400">Avoid after <strong class="text-white">2:00 PM</strong> to protect sleep quality</span></div>
+              <div class="flex items-start gap-2"><span class="text-yellow-400 font-bold w-5 flex-shrink-0">6.</span><span class="text-slate-400">Cycle off 1 week per month to prevent tolerance</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-center">
+          <div class="stat-card rounded-xl p-3"><div class="text-2xl mb-1">⚡</div><div class="text-yellow-400 font-bold">+20–30%</div><div class="text-slate-500">Fat Oxidation</div></div>
+          <div class="stat-card rounded-xl p-3"><div class="text-2xl mb-1">💪</div><div class="text-sky-400 font-bold">+5–10%</div><div class="text-slate-500">Strength Output</div></div>
+          <div class="stat-card rounded-xl p-3"><div class="text-2xl mb-1">🧠</div><div class="text-violet-400 font-bold">↑↑↑</div><div class="text-slate-500">Mental Focus</div></div>
+          <div class="stat-card rounded-xl p-3"><div class="text-2xl mb-1">⏱️</div><div class="text-emerald-400 font-bold">~30 min</div><div class="text-slate-500">Peak Onset</div></div>
+        </div>
+      </div>
+
+      <!-- 4: Abs on Leg Day -->
+      <div class="card rounded-2xl p-6">
+        <div class="flex items-start gap-4 mb-5">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3)">🦵</div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Train Abs on Leg Days — Here's Why</h3>
+            <p class="text-slate-400 text-sm mt-0.5">The smartest way to program core training inside a PPL split</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div class="mentor-card mc-green rounded-xl">
+            <h4 class="text-emerald-400 font-semibold text-sm mb-3">Why Leg Day + Abs?</h4>
+            <ul class="text-slate-400 text-xs space-y-2 leading-relaxed">
+              <li>✅ <strong class="text-white">No interference:</strong> Abs are fresh — not used as primary movers on Leg Day</li>
+              <li>✅ <strong class="text-white">Core stability:</strong> Squats, leg press and RDLs already engage core isometrically</li>
+              <li>✅ <strong class="text-white">Better recovery:</strong> Abs on Push/Pull fatigues the stabilizers needed for pressing and rows</li>
+              <li>✅ <strong class="text-white">Frequency:</strong> Training abs 2×/week (both Leg Days) hits the optimal stimulus</li>
+              <li>✅ <strong class="text-white">Efficiency:</strong> Leg Day = biggest metabolic session. Pairing with abs = double benefit.</li>
+            </ul>
+          </div>
+          <div class="mentor-card mc-blue rounded-xl">
+            <h4 class="text-sky-400 font-semibold text-sm mb-3">🎯 Best Abs Exercises for Leg Day</h4>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between items-center"><span class="text-slate-400">Hanging Leg Raises</span><span class="badge badge-blue">3 × 15</span></div>
+              <div class="flex justify-between items-center"><span class="text-slate-400">Cable Crunches</span><span class="badge badge-blue">3 × 20</span></div>
+              <div class="flex justify-between items-center"><span class="text-slate-400">Decline Sit-ups</span><span class="badge badge-blue">3 × 15</span></div>
+              <div class="flex justify-between items-center"><span class="text-slate-400">Russian Twists</span><span class="badge badge-blue">3 × 20</span></div>
+              <div class="flex justify-between items-center"><span class="text-slate-400">Plank Hold</span><span class="badge badge-blue">3 × 60s</span></div>
+              <div class="flex justify-between items-center"><span class="text-slate-400">Ab Wheel Rollout</span><span class="badge badge-blue">3 × 12</span></div>
+              <div class="flex justify-between items-center"><span class="text-slate-400">Floor Leg Raises</span><span class="badge badge-blue">3 × 20</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-xl p-4" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)">
+          <h4 class="text-emerald-400 font-semibold text-sm mb-2">💎 Programming Tip</h4>
+          <p class="text-slate-400 text-xs leading-relaxed">Do compound leg exercises first (squats → leg press → RDL), then finish with <strong class="text-white">15–20 minutes of abs at the end of Leg Day</strong>. This prevents core fatigue from limiting your heavy lifts. Optionally add a light 5-min abs finisher at the end of Pull Day too — pull-ups and rows already hit your core, so a finisher maximises stimulus without adding recovery debt.</p>
+        </div>
+      </div>
+
+      <!-- 5: 12-Week Blueprint -->
+      <div class="card rounded-2xl p-6" style="border-color:rgba(139,92,246,0.3);background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(30,41,59,0.97))">
+        <div class="flex items-start gap-4 mb-5">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style="background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.4)">🗺️</div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Complete Beginner's 12-Week Blueprint</h3>
+            <p class="text-slate-400 text-sm mt-0.5">Your step-by-step roadmap from couch to confident lifter</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div class="rounded-xl p-4" style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.2)">
+            <div class="text-sky-400 font-bold text-sm">Weeks 1–4</div>
+            <div class="text-white font-semibold text-xs mb-2 mt-0.5">Foundation Phase</div>
+            <ul class="text-slate-400 text-xs space-y-1 leading-relaxed">
+              <li>• Learn perfect exercise form</li>
+              <li>• 3-day PPL (Mon/Wed/Fri)</li>
+              <li>• 3 sets × 10–12 reps</li>
+              <li>• Walk 8,000 steps/day</li>
+              <li>• Track calories (TDEE − 200)</li>
+              <li>• Prioritize 8 hours sleep</li>
+            </ul>
+          </div>
+          <div class="rounded-xl p-4" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2)">
+            <div class="text-violet-400 font-bold text-sm">Weeks 5–8</div>
+            <div class="text-white font-semibold text-xs mb-2 mt-0.5">Building Phase</div>
+            <ul class="text-slate-400 text-xs space-y-1 leading-relaxed">
+              <li>• Increase to 4-day PPL</li>
+              <li>• Apply progressive overload</li>
+              <li>• 4 sets × 8–12 reps</li>
+              <li>• Add 20 min cardio 2×/week</li>
+              <li>• Deficit: TDEE − 400 kcal</li>
+              <li>• Protein: 1.8g/kg bodyweight</li>
+            </ul>
+          </div>
+          <div class="rounded-xl p-4" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2)">
+            <div class="text-emerald-400 font-bold text-sm">Weeks 9–12</div>
+            <div class="text-white font-semibold text-xs mb-2 mt-0.5">Acceleration Phase</div>
+            <ul class="text-slate-400 text-xs space-y-1 leading-relaxed">
+              <li>• Full 6-day PPL split</li>
+              <li>• Heavy compounds (5×5)</li>
+              <li>• 30 min cardio 3×/week</li>
+              <li>• Pre-workout black coffee</li>
+              <li>• Deficit: TDEE − 500 kcal</li>
+              <li>• Weekly body measurements</li>
+            </ul>
+          </div>
+        </div>
+        <div class="rounded-xl p-4" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2)">
+          <h4 class="text-violet-400 font-semibold text-sm mb-3">🏅 The Golden Rules — Never Forget These</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-400">
+            <div class="flex items-start gap-2"><span class="text-violet-400 font-bold">💊</span><span><strong class="text-white">Consistency &gt; Perfection.</strong> 80% effort consistently beats 100% effort occasionally.</span></div>
+            <div class="flex items-start gap-2"><span class="text-violet-400 font-bold">📈</span><span><strong class="text-white">Progressive Overload</strong> is the only driver of muscle growth. Add weight or reps weekly.</span></div>
+            <div class="flex items-start gap-2"><span class="text-violet-400 font-bold">🍗</span><span><strong class="text-white">Protein is king.</strong> Aim for 1.6–2.2g per kg bodyweight daily to protect muscle on a deficit.</span></div>
+            <div class="flex items-start gap-2"><span class="text-violet-400 font-bold">😴</span><span><strong class="text-white">Sleep = Recovery.</strong> Growth hormone peaks during deep sleep. 7–9 hours is non-negotiable.</span></div>
+            <div class="flex items-start gap-2"><span class="text-violet-400 font-bold">💧</span><span><strong class="text-white">Stay hydrated.</strong> Drink 3–4L of water daily. Dehydration cuts performance by 10–15%.</span></div>
+            <div class="flex items-start gap-2"><span class="text-violet-400 font-bold">📷</span><span><strong class="text-white">Track weekly.</strong> Take photos and measurements — the scale lies, your mirror and tape don't.</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /space-y-6 -->
+  </section>
+
+</main><!-- /main -->
+
+<!-- ── MOBILE BOTTOM NAV ─────────────────────────────── -->
+<nav class="nav-mobile fixed bottom-0 left-0 right-0 z-50 px-2 py-2" style="background:rgba(15,23,42,0.97);border-top:1px solid rgba(71,85,105,0.4);backdrop-filter:blur(14px)">
+  <div class="flex justify-around max-w-sm mx-auto">
+    <button onclick="showTab('profile')"  class="tab-mobile-btn flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-colors" data-tab="profile" style="color:#38bdf8">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke-width="2"/><path stroke-width="2" stroke-linecap="round" d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span class="text-xs">Profile</span>
+    </button>
+    <button onclick="showTab('workout')" class="tab-mobile-btn flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-colors" data-tab="workout" style="color:#64748b">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h3m0 0l2-4 2 8 2-4 2 4 2-8 2 4h3"/></svg>
+      <span class="text-xs">Workout</span>
+    </button>
+    <button onclick="showTab('cardio')"  class="tab-mobile-btn flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-colors" data-tab="cardio" style="color:#64748b">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5.5A6.5 6.5 0 106.5 12H3m13.5-6.5l2 2-2 2"/></svg>
+      <span class="text-xs">Cardio</span>
+    </button>
+    <button onclick="showTab('tdee')"    class="tab-mobile-btn flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-colors" data-tab="tdee" style="color:#64748b">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span class="text-xs">TDEE</span>
+    </button>
+    <button onclick="showTab('mentor')"  class="tab-mobile-btn flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-colors" data-tab="mentor" style="color:#64748b">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      <span class="text-xs">Mentor</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ── JAVASCRIPT ─────────────────────────────────────── -->
+<script>
+// ─── App State ──────────────────────────────────
+const state = {
+  bmr: 0, bmi: 0, bodyFat: 0, weight: 70,
+  exercises: [],
+  workoutCalories: 0, stepsCalories: 0,
+  cardioCalories: 0, walkRunCalories: 0,
+  savedWorkout: null,
+};
+
+// ─── Init ────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('currentDate').textContent =
+    now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+  document.getElementById('workoutDate').value = now.toISOString().split('T')[0];
+  renderExercises();
+});
+
+// ─── Tab Navigation ──────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+
+  // Desktop tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+
+  // Mobile tabs
+  document.querySelectorAll('.tab-mobile-btn').forEach(btn => {
+    btn.style.color = btn.dataset.tab === tab ? '#38bdf8' : '#64748b';
+  });
+
+  if (tab === 'tdee') calculateTDEE();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Profile ─────────────────────────────────────
+function toggleHip() {
+  document.getElementById('hipRow').classList.toggle('hidden',
+    document.getElementById('gender').value !== 'female');
+}
+
+function calculateBody() {
+  const age    = parseFloat(document.getElementById('age').value);
+  const gender = document.getElementById('gender').value;
+  const weight = parseFloat(document.getElementById('weight').value);
+  const height = parseFloat(document.getElementById('height').value);
+  const neck   = parseFloat(document.getElementById('neck').value);
+  const waist  = parseFloat(document.getElementById('waist').value);
+  const hip    = parseFloat(document.getElementById('hip').value) || 0;
+
+  if (!age || !weight || !height || !neck || !waist) {
+    alert('Please fill in Age, Gender, Weight, Height, Neck, and Waist.'); return;
+  }
+  state.weight = weight;
+
+  // BMI
+  const hm = height / 100;
+  const bmi = weight / (hm * hm);
+  state.bmi = bmi;
+  document.getElementById('bmiValue').textContent = bmi.toFixed(1);
+  const bmiPct = Math.min(100, Math.max(0, ((bmi - 10) / 40) * 100));
+  document.getElementById('bmiBar').style.width = bmiPct + '%';
+
+  const badgeMap = [
+    [18.5, 'Underweight', 'badge-blue'],
+    [25,   'Normal ✅',  'badge-green'],
+    [30,   'Overweight', 'badge-yellow'],
+    [35,   'Obese',      'badge-orange'],
+    [Infinity, 'Severely Obese', 'badge-red'],
+  ];
+  const [, label, cls] = badgeMap.find(([max]) => bmi < max);
+  const badgeEl = document.getElementById('bmiBadge');
+  badgeEl.textContent = label;
+  badgeEl.className = 'badge ' + cls;
+
+  // BMR — Mifflin-St Jeor
+  const bmr = gender === 'male'
+    ? 10 * weight + 6.25 * height - 5 * age + 5
+    : 10 * weight + 6.25 * height - 5 * age - 161;
+  state.bmr = Math.round(bmr);
+  document.getElementById('bmrValue').textContent = Math.round(bmr);
+
+  // Body Fat — US Navy
+  let bf;
+  try {
+    if (gender === 'male') {
+      if (waist <= neck) throw new Error();
+      bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
+    } else {
+      if (waist + hip <= neck) throw new Error();
+      bf = 495 / (1.29579 - 0.35004 * Math.log10(waist + hip - neck) + 0.22100 * Math.log10(height)) - 450;
+    }
+    if (bf < 2 || bf > 70 || isNaN(bf)) throw new Error();
+  } catch {
+    // Deurenberg fallback
+    bf = gender === 'male'
+      ? 1.20 * bmi + 0.23 * age - 16.2
+      : 1.20 * bmi + 0.23 * age - 5.4;
+  }
+  bf = Math.max(2, Math.min(70, bf));
+  state.bodyFat = bf;
+
+  const fatMass = (bf / 100) * weight;
+  const lbm = weight - fatMass;
+
+  document.getElementById('bfValue').textContent = bf.toFixed(1) + '%';
+  document.getElementById('fatMassValue').textContent = fatMass.toFixed(1);
+  document.getElementById('lbmValue').textContent = lbm.toFixed(1);
+
+  renderMacros(bmr, weight);
+  calculateTDEE();
+}
+
+function renderMacros(bmr, weight) {
+  const deficitTDEE = Math.round(bmr * 1.55 - 500);
+  const protein = Math.round(weight * 2.0);
+  const fat = Math.round((deficitTDEE * 0.25) / 9);
+  const carbs = Math.max(0, Math.round((deficitTDEE - protein * 4 - fat * 9) / 4));
+  document.getElementById('macroTargets').innerHTML = `
+    <div class="space-y-2 text-xs divide-y divide-slate-800">
+      <div class="flex justify-between py-1.5"><span class="text-slate-400">🍗 Protein</span><span class="text-emerald-400 font-semibold">${protein}g</span></div>
+      <div class="flex justify-between py-1.5"><span class="text-slate-400">🌾 Carbs</span><span class="text-sky-400 font-semibold">${carbs}g</span></div>
+      <div class="flex justify-between py-1.5"><span class="text-slate-400">🥑 Fats</span><span class="text-yellow-400 font-semibold">${fat}g</span></div>
+      <p class="text-slate-600 text-xs pt-1">TDEE − 500 deficit · 2g protein/kg</p>
+    </div>`;
+}
+
+// ─── Workout Logger ───────────────────────────────
+const SPLIT_LABELS = {
+  push:'Push Day', pull:'Pull Day', legs:'Legs & Core',
+  upper:'Upper Body', lower:'Lower Body', fullbody:'Full Body', custom:'Custom'
+};
+
+const PPL_PRESETS = {
+  push: [
+    ['Incline Chest Press',4,10,''],['Flat Chest Press',3,12,''],['Pec Deck / Fly',3,15,''],
+    ['Cable Crossover',3,15,''],['Overhead Press',4,10,''],['Lateral Raise',4,15,''],
+    ['Front Raise',3,12,''],['Triceps Pushdown',4,15,''],['Overhead Tricep Ext.',3,12,''],['Kickbacks',3,15,''],
+  ],
+  pull: [
+    ['Lat Pulldown',4,12,''],['Seated Cable Row',4,12,''],['Barbell Row',3,10,''],
+    ['Face Pulls',3,20,''],['Rear Delt Fly',3,15,''],['Bicep Curl',4,12,''],
+    ['Hammer Curl',3,15,''],['Preacher Curl',3,12,''],['Concentration Curl',3,15,''],
+  ],
+  legs: [
+    ['Squats',4,10,''],['Leg Press',4,12,''],['Romanian Deadlift',3,12,''],
+    ['Leg Extension',3,15,''],['Leg Curl',3,15,''],['Calf Raises',4,20,''],
+    ['Hanging Leg Raises',3,15,''],['Cable Crunches',3,20,''],['Plank',3,60,''],['Russian Twists',3,20,''],
+  ],
+  upper: [
+    ['Bench Press',4,10,''],['Lat Pulldown',4,12,''],['Overhead Press',3,10,''],
+    ['Seated Row',3,12,''],['Bicep Curl',3,12,''],['Triceps Pushdown',3,15,''],['Lateral Raise',3,15,''],
+  ],
+  lower: [
+    ['Squats',4,10,''],['Leg Press',4,12,''],['Romanian Deadlift',3,12,''],
+    ['Leg Curl',3,15,''],['Leg Extension',3,15,''],['Calf Raises',4,20,''],['Hanging Leg Raises',3,15,''],
+  ],
+  fullbody: [
+    ['Squat',3,10,''],['Bench Press',3,10,''],['Deadlift',3,8,''],['Overhead Press',3,10,''],
+    ['Lat Pulldown',3,10,''],['Bicep Curl',2,15,''],['Triceps Pushdown',2,15,''],['Plank',3,60,''],
+  ],
+};
+
+function handleSplitChange() {
+  const val = document.getElementById('splitSelect').value;
+  document.getElementById('customSplitDiv').classList.toggle('hidden', val !== 'custom');
+  document.getElementById('splitLabel').textContent = SPLIT_LABELS[val] || 'Custom';
+}
+
+function loadPPLPresets() {
+  const val = document.getElementById('splitSelect').value;
+  const data = PPL_PRESETS[val] || PPL_PRESETS.push;
+  state.exercises = data.map(([name,sets,reps,weight]) => ({name,sets,reps,weight}));
+  renderExercises(); updateWorkoutStats();
+}
+
+function addExerciseRow() {
+  state.exercises.push({name:'',sets:3,reps:10,weight:''});
+  renderExercises(); updateWorkoutStats();
+}
+
+function removeExercise(idx) {
+  state.exercises.splice(idx,1);
+  renderExercises(); updateWorkoutStats();
+}
+
+function renderExercises() {
+  const list  = document.getElementById('exerciseList');
+  const empty = document.getElementById('emptyState');
+  if (!state.exercises.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = state.exercises.map((ex,i) => `
+    <div class="exercise-row grid grid-cols-12 gap-1.5 sm:gap-2 items-center rounded-xl px-2 py-1.5">
+      <input type="text" value="${ex.name}" placeholder="Exercise name"
+        oninput="state.exercises[${i}].name=this.value"
+        class="col-span-5 input-field rounded-lg px-2 py-1.5 text-xs" />
+      <input type="number" value="${ex.sets}" min="1" max="20"
+        oninput="state.exercises[${i}].sets=parseInt(this.value)||0;updateWorkoutStats()"
+        class="col-span-2 input-field rounded-lg px-1 py-1.5 text-xs text-center" />
+      <input type="number" value="${ex.reps}" min="1" max="200"
+        oninput="state.exercises[${i}].reps=parseInt(this.value)||0;updateWorkoutStats()"
+        class="col-span-2 input-field rounded-lg px-1 py-1.5 text-xs text-center" />
+      <input type="text" value="${ex.weight}" placeholder="—"
+        oninput="state.exercises[${i}].weight=this.value"
+        class="col-span-2 input-field rounded-lg px-1 py-1.5 text-xs text-center" />
+      <button onclick="removeExercise(${i})" class="col-span-1 btn-danger rounded-lg p-1.5 flex items-center justify-center">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function updateWorkoutStats() {
+  const n = state.exercises.length;
+  const s = state.exercises.reduce((acc,e) => acc + (parseInt(e.sets)||0), 0);
+  const dur = parseInt(document.getElementById('workoutDuration').value) || 0;
+  const cal = Math.round(dur * 5.5);
+  state.workoutCalories = cal;
+  document.getElementById('totalExercises').textContent = n;
+  document.getElementById('totalSets').textContent = s;
+  document.getElementById('workoutCalories').textContent = cal + ' kcal';
+  document.getElementById('workoutDurationDisplay').textContent = dur + ' min';
+}
+
+function saveWorkout() {
+  if (!state.exercises.length) { alert('Add at least one exercise first!'); return; }
+  const val   = document.getElementById('splitSelect').value;
+  const split = val === 'custom'
+    ? (document.getElementById('customSplitName').value || 'Custom')
+    : SPLIT_LABELS[val];
+  state.savedWorkout = {
+    split, date: document.getElementById('workoutDate').value,
+    duration: parseInt(document.getElementById('workoutDuration').value) || 0,
+    exercises: [...state.exercises], calories: state.workoutCalories,
+  };
+  const el = document.getElementById('saveSuccess');
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 3000);
+  calculateTDEE();
+}
+
+// ─── Steps & Cardio ───────────────────────────────
+function updateStepsCalc() {
+  const steps   = parseInt(document.getElementById('stepsCount').value) || 0;
+  const walkMin = parseInt(document.getElementById('walkDuration').value) || 0;
+  const runMin  = parseInt(document.getElementById('runDuration').value) || 0;
+  const w = state.weight || 70;
+
+  const stepsCal   = Math.round(steps * 0.04 * (w / 70));
+  const walkCal    = Math.round(walkMin * 3.5 * w / 200);
+  const runCal     = Math.round(runMin  * 8.0 * w / 200);
+  const walkRunCal = walkCal + runCal;
+
+  state.stepsCalories   = stepsCal;
+  state.walkRunCalories = walkRunCal;
+
+  const pct = Math.min(100, Math.round((steps / 10000) * 100));
+  document.getElementById('stepsPercentText').textContent = pct + '%';
+  document.getElementById('stepsProgressBar').style.width = pct + '%';
+  document.getElementById('stepsCalories').textContent   = stepsCal;
+  document.getElementById('walkRunCalories').textContent = walkRunCal;
+}
+
+const CARDIO_METS = {
+  treadmill:9.8, cycling:6.8, elliptical:5.5, rowing:7.0,
+  swimming:6.0, hiit:10.0, jumprope:12.0, stairmaster:8.5, manual:0
+};
+
+function updateCardioCalc() {
+  const type = document.getElementById('cardioType').value;
+  const dur  = parseInt(document.getElementById('cardioDuration').value) || 0;
+  const w    = state.weight || 70;
+  const isM  = type === 'manual';
+  document.getElementById('manualCardioDiv').classList.toggle('hidden', !isM);
+
+  const cal = isM
+    ? (parseInt(document.getElementById('manualCardioCalories').value) || 0)
+    : Math.round((CARDIO_METS[type] || 6) * w * dur / 200);
+
+  state.cardioCalories = cal;
+  document.getElementById('cardioCaloriesDisplay').textContent = cal;
+}
+
+function saveCardio() {
+  const el = document.getElementById('cardioSuccess');
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 3000);
+  calculateTDEE();
+}
+
+// ─── TDEE ─────────────────────────────────────────
+function calculateTDEE() {
+  const bmr        = state.bmr || 0;
+  const steps      = state.stepsCalories + state.walkRunCalories;
+  const cardio     = state.cardioCalories;
+  const workout    = state.workoutCalories;
+  const neat       = Math.round(bmr * 0.10);
+  const tdee       = bmr + steps + cardio + workout + neat;
+
+  const fmt = n => n > 0 ? n.toLocaleString() : '—';
+  document.getElementById('tdeeTotal').textContent   = fmt(tdee);
+  document.getElementById('tdeeDeficit').textContent = tdee > 0 ? (tdee-500).toLocaleString()+' kcal' : '—';
+  document.getElementById('tdeeMaintain').textContent= tdee > 0 ? tdee.toLocaleString()+' kcal' : '—';
+  document.getElementById('tdeeSurplus').textContent = tdee > 0 ? (tdee+300).toLocaleString()+' kcal' : '—';
+
+  if (tdee > 0) {
+    const pct = v => Math.round((v / tdee) * 100) + '%';
+    const set = (id, val, barId) => {
+      document.getElementById(id).textContent = val.toLocaleString() + ' kcal';
+      document.getElementById(barId).style.width = pct(val);
+    };
+    set('tdeeBMRVal',  bmr,    'tdeeBMRBar');
+    set('tdeeStepsVal',steps,  'tdeeStepsBar');
+    set('tdeeCardioVal',cardio,'tdeeCardioBar');
+    set('tdeeWorkoutVal',workout,'tdeeWorkoutBar');
+    set('tdeeNEATVal', neat,   'tdeeNEATBar');
+  }
+
+  // Workout summary
+  const ws = state.savedWorkout;
+  if (ws) {
+    document.getElementById('workoutSummaryDisplay').innerHTML = `
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="badge badge-blue">${ws.split}</span>
+        <span class="text-slate-400 text-xs">${ws.date}</span>
+        <span class="text-slate-600 text-xs">•</span>
+        <span class="text-slate-400 text-xs">${ws.duration} min</span>
+        <span class="text-slate-600 text-xs">•</span>
+        <span class="text-sky-400 text-xs font-semibold">${ws.calories} kcal</span>
+      </div>
+      <div class="space-y-0">
+        ${ws.exercises.map(e => `
+          <div class="flex justify-between py-1.5 border-b border-slate-800 last:border-0 text-xs">
+            <span class="text-slate-300">${e.name || 'Exercise'}</span>
+            <span class="text-slate-500">${e.sets}×${e.reps}${e.weight ? ' @ '+e.weight+'kg' : ''}</span>
+          </div>`).join('')}
+      </div>
+      <p class="text-xs text-slate-700 mt-3">${ws.exercises.length} exercises · ${ws.exercises.reduce((s,e)=>s+(parseInt(e.sets)||0),0)} total sets</p>`;
+  }
+}
+</script>
+</body>
+</html>
